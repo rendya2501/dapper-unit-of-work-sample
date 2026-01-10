@@ -24,33 +24,23 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     /// <response code="400">リクエストが不正です</response>
     /// <response code="500">内部サーバーエラー</response>
     [HttpPost]
-    [ProducesResponseType(typeof(CreateOrderResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(CreateOrderResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {
-        try
-        {
-            // リクエストモデルを Application 層のモデルに変換
-            var items = request.Items
-                .Select(i => new OrderItem(i.ProductId, i.Quantity))
-                .ToList();
+        // バリデーションは ValidationFilter が自動実行
+        // エラーは ProblemDetailsMiddleware が自動変換
 
-            var orderId = await orderService.CreateOrderAsync(request.CustomerId, items);
+        var items = request.Items
+            .Select(i => new OrderItem(i.ProductId, i.Quantity))
+            .ToList();
 
-            return CreatedAtAction(
-                nameof(GetOrderById),
-                new { id = orderId },
-                new CreateOrderResponse(orderId));
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new ErrorResponse(ex.Message));
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new ErrorResponse("Internal server error", ex.Message));
-        }
+        var orderId = await orderService.CreateOrderAsync(request.CustomerId, items);
+
+        return CreatedAtAction(
+            nameof(GetOrderById),
+            new { id = orderId },
+            new CreateOrderResponse(orderId));
     }
 
     /// <summary>
@@ -72,11 +62,8 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOrderById(int id)
     {
+        // NotFoundException は ProblemDetailsMiddleware が自動変換
         var order = await orderService.GetOrderByIdAsync(id);
-
-        if (order == null)
-            return NotFound(new { Error = $"Order {id} not found." });
-
         return Ok(order);
     }
 }

@@ -48,7 +48,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // ミドルウェア（例外ハンドリング用）
-app.UseMiddleware<ValidationExceptionMiddleware>();
+app.UseMiddleware<ProblemDetailsMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();

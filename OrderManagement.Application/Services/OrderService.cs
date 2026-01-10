@@ -1,6 +1,7 @@
 ﻿using OrderManagement.Application.Models;
 using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Domain.Entities;
+using OrderManagement.Domain.Exceptions;
 using OrderManagement.Infrastructure.UnitOfWork;
 
 namespace OrderManagement.Application.Services;
@@ -23,8 +24,8 @@ public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
     /// <inheritdoc />
     public async Task<int> CreateOrderAsync(int customerId, List<OrderItem> items)
     {
-        if (!items.Any())
-            throw new InvalidOperationException("Order must have at least one item.");
+        if (items.Count == 0)
+            throw new BusinessRuleViolationException("Order must have at least one item.");
 
         // ===== トランザクション境界開始 =====
         using var uow = unitOfWorkFactory();
@@ -43,11 +44,11 @@ public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
             foreach (var item in items)
             {
                 var inventory = await uow.Inventory.GetByProductIdAsync(item.ProductId)
-                    ?? throw new InvalidOperationException($"Product {item.ProductId} not found.");
+                    ?? throw new NotFoundException("Product", item.ProductId);
 
                 if (inventory.Stock < item.Quantity)
                 {
-                    throw new InvalidOperationException(
+                    throw new BusinessRuleViolationException(
                         $"Insufficient stock for {inventory.ProductName}. " +
                         $"Available: {inventory.Stock}, Requested: {item.Quantity}");
                 }
@@ -94,6 +95,9 @@ public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
     public async Task<Order?> GetOrderByIdAsync(int id)
     {
         using var uow = unitOfWorkFactory();
-        return await uow.Orders.GetByIdAsync(id);
+
+        var order = await uow.Orders.GetByIdAsync(id);
+
+        return order ?? throw new NotFoundException("Order", id);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace OrderManagement.Api.Filters;
@@ -40,24 +39,7 @@ public class ValidationFilter(IServiceProvider serviceProvider) : IAsyncActionFi
                 var validationResult = await validator.ValidateAsync(validationContext);
 
                 if (!validationResult.IsValid)
-                {
-                    // バリデーションエラーをレスポンスとして返す
-                    var errors = validationResult.Errors.Select(e => new
-                    {
-                        Property = e.PropertyName,
-                        Error = e.ErrorMessage
-                    });
-
-                    context.Result = new BadRequestObjectResult(new
-                    {
-                        Type = "ValidationError",
-                        Title = "One or more validation errors occurred.",
-                        Status = 400,
-                        Errors = errors
-                    });
-
-                    return; // 処理を中断
-                }
+                    throw new ValidationException(validationResult.Errors);
             }
         }
 
