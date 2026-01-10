@@ -28,6 +28,14 @@ public class ProblemDetailsMiddleware(
     ILogger<ProblemDetailsMiddleware> logger,
     IHostEnvironment environment)
 {
+    /// <summary>
+    /// 次のミドルウェアを実行し、パイプライン内で発生したすべての例外を捕捉する。
+    /// </summary>
+    /// <param name="context">HTTP リクエストコンテキスト</param>
+    /// <remarks>
+    /// このメソッドはミドルウェアのエントリーポイントであり、
+    /// 例外はここで必ず捕捉され <see cref="HandleExceptionAsync"/> に委譲される。
+    /// </remarks>
     public async Task InvokeAsync(HttpContext context)
     {
         try
@@ -40,6 +48,14 @@ public class ProblemDetailsMiddleware(
         }
     }
 
+    /// <summary>
+    /// 捕捉した例外を ProblemDetails 形式の HTTP レスポンスに変換する。
+    /// </summary>
+    /// <param name="context">HTTP コンテキスト</param>
+    /// <param name="exception">発生した例外</param>
+    /// <remarks>
+    /// 例外の種類に応じて HTTPステータスコード、タイトル、詳細、拡張情報を決定する。
+    /// </remarks>
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         // C# 13: switch 式で明示的にタプルを使用
@@ -78,8 +94,17 @@ public class ProblemDetailsMiddleware(
     }
 
     /// <summary>
-    /// 例外の種類に応じてエラー詳細を返す
+    /// 例外の種類に応じて ProblemDetails 用の情報を抽出する。
     /// </summary>
+    /// <param name="exception">発生した例外</param>
+    /// <returns>
+    /// HTTP ステータスコード、タイトル、詳細メッセージ、
+    /// バリデーションエラーの一覧
+    /// </returns>
+    /// <remarks>
+    /// このメソッドは HTTP 表現の判断のみを行い、
+    /// レスポンス生成自体は行わない。
+    /// </remarks>
     private (int StatusCode, string Title, string Detail, IEnumerable<ValidationError> Errors)
         GetErrorDetails(Exception exception)
     {
@@ -119,17 +144,38 @@ public class ProblemDetailsMiddleware(
         };
     }
 
+    /// <summary>
+    /// HTTP ステータスコードに応じて適切なログレベルで例外を記録する。
+    /// </summary>
+    /// <param name="exception">記録対象の例外</param>
+    /// <param name="statusCode">対応する HTTP ステータスコード</param>
+
     private void LogException(Exception exception, int statusCode)
     {
         if (statusCode >= 500)
         {
-            logger.LogError(exception, "Internal server error occurred");
+            if (logger.IsEnabled(LogLevel.Error))
+            {
+                logger.LogError(exception, "Internal server error occurred");
+            }
         }
         else if (statusCode >= 400)
         {
-            logger.LogWarning(exception, "Client error occurred: {Message}", exception.Message);
+            if (logger.IsEnabled(LogLevel.Warning))
+            {
+                logger.LogWarning(
+                    exception,
+                    "Client error occurred: {Message}",
+                    exception.Message);
+            }
         }
     }
+
+    /// <summary>
+    /// 実行環境に応じてクライアントへ返却する安全なエラーメッセージを取得する。
+    /// </summary>
+    /// <param name="exception">発生した例外</param>
+    /// <returns>クライアント向けエラーメッセージ</returns>
 
     private string GetSafeErrorMessage(Exception exception)
     {
@@ -141,6 +187,12 @@ public class ProblemDetailsMiddleware(
 
         return exception.Message;
     }
+
+    /// <summary>
+    /// HTTP ステータスコードに対応する RFC 参照 URI を取得する。
+    /// </summary>
+    /// <param name="statusCode">HTTP ステータスコード</param>
+    /// <returns>ProblemDetails の type フィールドに設定する URI</returns>
 
     private static string GetProblemType(int statusCode)
     {
@@ -158,50 +210,3 @@ public class ProblemDetailsMiddleware(
 /// バリデーションエラーの詳細
 /// </summary>
 public record ValidationError(string Property, string Error);
-
-
-//public sealed class ProblemDetailsMiddleware(RequestDelegate next)
-//{
-//    public async Task InvokeAsync(HttpContext context)
-//    {
-//        try
-//        {
-//            await next(context);
-//        }
-//        catch (ValidationException ex)
-//        {
-//            await WriteProblem(context, StatusCodes.Status400BadRequest,
-//                "Validation Error", ex.Message);
-//        }
-//        catch (NotFoundException ex)
-//        {
-//            await WriteProblem(context, StatusCodes.Status404NotFound,
-//                "Not Found", ex.Message);
-//        }
-//        catch (Exception ex)
-//        {
-//            await WriteProblem(context, StatusCodes.Status500InternalServerError,
-//                "Internal Server Error", ex.Message);
-//        }
-//    }
-
-//    private static async Task WriteProblem(
-//        HttpContext context,
-//        int status,
-//        string title,
-//        string detail)
-//    {
-//        context.Response.StatusCode = status;
-//        context.Response.ContentType = "application/problem+json";
-
-//        var problem = new ProblemDetails
-//        {
-//            Status = status,
-//            Title = title,
-//            Detail = detail,
-//            Instance = context.Request.Path
-//        };
-
-//        await context.Response.WriteAsJsonAsync(problem);
-//    }
-//}
