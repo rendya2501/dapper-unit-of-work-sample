@@ -25,6 +25,7 @@ namespace OrderManagement.Infrastructure.UnitOfWork;
 /// </remarks>
 public interface IUnitOfWork : IDisposable
 {
+    #region トランザクション
     /// <summary>
     /// トランザクションを開始します
     /// </summary>
@@ -42,7 +43,9 @@ public interface IUnitOfWork : IDisposable
     /// </summary>
     /// <exception cref="InvalidOperationException">トランザクションが開始されていない場合</exception>
     void Rollback();
+    #endregion
 
+    #region リポジトリ
     /// <summary>
     /// 注文リポジトリを取得します
     /// </summary>
@@ -57,4 +60,5 @@ public interface IUnitOfWork : IDisposable
     /// 監査ログリポジトリを取得します
     /// </summary>
     IAuditLogRepository AuditLogs { get; }
+    #endregion
 }

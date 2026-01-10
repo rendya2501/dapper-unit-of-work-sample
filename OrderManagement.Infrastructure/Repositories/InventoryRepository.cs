@@ -5,6 +5,19 @@ using System.Data;
 
 namespace OrderManagement.Infrastructure.Repositories;
 
+/// <summary>
+/// 在庫リポジトリの実装
+/// </summary>
+/// <remarks>
+/// <para><strong>設計原則</strong></para>
+/// <list type="bullet">
+/// <item>Repository は Connection と Transaction を受け取るが、Begin/Commit/Rollback は一切行わない</item>
+/// <item>トランザクション管理は UnitOfWork が責任を持つ</item>
+/// <item>Repository は純粋にデータアクセスのみに専念</item>
+/// </list>
+/// </remarks>
+/// <param name="connection">データベース接続</param>
+/// <param name="transaction">トランザクション（UnitOfWork から注入）</param>
 public class InventoryRepository(IDbConnection connection, IDbTransaction? transaction)
     : IInventoryRepository
 {

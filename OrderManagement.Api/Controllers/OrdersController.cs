@@ -4,7 +4,6 @@ using OrderManagement.Api.Responses;
 using OrderManagement.Application.Models;
 using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Domain.Entities;
-using OrderManagement.Infrastructure.UnitOfWork;
 
 namespace OrderManagement.Api.Controllers;
 
@@ -12,12 +11,9 @@ namespace OrderManagement.Api.Controllers;
 /// 注文関連のAPIエンドポイント
 /// </summary>
 /// <param name="orderService">注文サービス</param>
-/// <param name="unitOfWorkFactory">UnitOfWork ファクトリ</param>
 [ApiController]
 [Route("api/[controller]")]
-public class OrdersController(
-    IOrderService orderService,
-    Func<IUnitOfWork> unitOfWorkFactory) : ControllerBase
+public class OrdersController(IOrderService orderService) : ControllerBase
 {
     /// <summary>
     /// 注文を作成します
@@ -60,46 +56,27 @@ public class OrdersController(
     /// <summary>
     /// すべての注文を取得します
     /// </summary>
-    /// <returns>注文のリスト</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Order>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAllOrders()
     {
-        using var uow = unitOfWorkFactory();
-        var orders = await uow.Orders.GetAllAsync();
+        var orders = await orderService.GetAllOrdersAsync();
         return Ok(orders);
     }
 
     /// <summary>
     /// IDを指定して注文を取得します
     /// </summary>
-    /// <param name="id">注文ID</param>
-    /// <returns>注文</returns>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(Order), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOrderById(int id)
     {
-        using var uow = unitOfWorkFactory();
-        var order = await uow.Orders.GetByIdAsync(id);
+        var order = await orderService.GetOrderByIdAsync(id);
 
         if (order == null)
             return NotFound(new { Error = $"Order {id} not found." });
 
         return Ok(order);
-    }
-
-    /// <summary>
-    /// すべての監査ログを取得します
-    /// </summary>
-    /// <param name="limit">取得件数の上限</param>
-    /// <returns>監査ログのリスト</returns>
-    [HttpGet("audit-logs")]
-    [ProducesResponseType(typeof(IEnumerable<AuditLog>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetAuditLogs([FromQuery] int limit = 100)
-    {
-        using var uow = unitOfWorkFactory();
-        var logs = await uow.AuditLogs.GetAllAsync(limit);
-        return Ok(logs);
     }
 }

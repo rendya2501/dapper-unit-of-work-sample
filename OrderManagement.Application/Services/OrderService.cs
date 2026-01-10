@@ -73,18 +73,27 @@ public class OrderService(Func<IUnitOfWork> unitOfWorkFactory) : IOrderService
                 CreatedAt = DateTime.UtcNow
             });
 
-            // すべて成功 → Commit
             uow.Commit();
-            // ===== トランザクション境界終了（成功） =====
-
             return orderId;
         }
         catch
         {
-            // 例外発生 → Rollback
             uow.Rollback();
-            // ===== トランザクション境界終了（失敗） =====
             throw;
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Order>> GetAllOrdersAsync()
+    {
+        using var uow = unitOfWorkFactory();
+        return await uow.Orders.GetAllAsync();
+    }
+
+    /// <inheritdoc />
+    public async Task<Order?> GetOrderByIdAsync(int id)
+    {
+        using var uow = unitOfWorkFactory();
+        return await uow.Orders.GetByIdAsync(id);
     }
 }

@@ -1,4 +1,5 @@
 using FluentValidation;
+using OrderManagement.Api.Filters;
 using OrderManagement.Api.Middleware;
 using OrderManagement.Application.Services;
 using OrderManagement.Application.Services.Abstractions;
@@ -16,21 +17,26 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 DatabaseInitializer.Initialize(connectionString);
 
 // DI登録
-builder.Services.AddControllers();
+// Controller + 自前の ValidationFilter
+builder.Services.AddControllers(options =>
+{
+    // グローバルに ValidationFilter を適用
+    options.Filters.Add<ValidationFilter>();
+});
+
 builder.Services.AddOpenApi();
 
+// FluentValidation（Validator のみ登録）
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 // UnitOfWork Factory
-// UnitOfWork は毎回新しいインスタンスを生成
-// 接続文字列をクロージャでキャプチャ
 builder.Services.AddScoped<Func<IUnitOfWork>>(sp =>
     () => new UnitOfWork(connectionString));
 
 // Services
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
-
-// FluentValidation
-builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 var app = builder.Build();
 
@@ -41,7 +47,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-// 横断的関心事：バリデーション例外処理
+// ミドルウェア（例外ハンドリング用）
 app.UseMiddleware<ValidationExceptionMiddleware>();
 
 app.UseHttpsRedirection();

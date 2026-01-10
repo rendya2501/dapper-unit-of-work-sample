@@ -1,4 +1,6 @@
-﻿namespace OrderManagement.Application.Services.Abstractions;
+﻿using OrderManagement.Domain.Entities;
+
+namespace OrderManagement.Application.Services.Abstractions;
 
 /// <summary>
 /// 在庫サービスのインターフェース
@@ -8,12 +10,12 @@ public interface IInventoryService
     /// <summary>
     /// すべての在庫を取得します
     /// </summary>
-    Task<IEnumerable<Domain.Entities.Inventory>> GetAllAsync();
+    Task<IEnumerable<Inventory>> GetAllAsync();
 
     /// <summary>
     /// 商品IDを指定して在庫を取得します
     /// </summary>
-    Task<Domain.Entities.Inventory?> GetByProductIdAsync(int productId);
+    Task<Inventory?> GetByProductIdAsync(int productId);
 
     /// <summary>
     /// 在庫を作成します

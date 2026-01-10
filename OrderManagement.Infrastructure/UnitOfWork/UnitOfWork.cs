@@ -142,12 +142,6 @@ public class UnitOfWork : IUnitOfWork
     /// 既存の Repository インスタンスは古い Transaction を保持している。
     /// リセットすることで、次回アクセス時に新しい Transaction が注入される。
     /// </para>
-    /// 
-    /// <para><strong>ベストプラクティス：メソッド化</strong></para>
-    /// <para>
-    /// Repository を追加する際、BeginTransaction() を修正する必要がなくなる。
-    /// メンテナンス性が向上する。
-    /// </para>
     /// </remarks>
     private void ResetRepositories()
     {
