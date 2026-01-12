@@ -24,6 +24,18 @@ public static class DatabaseInitializer
         Console.WriteLine("Database initialized successfully.");
     }
 
+    public static void Initialize(IDbConnection connection)
+    {
+        if (connection.State != ConnectionState.Open)
+            connection.Open();
+
+        CreateTables(connection);
+        SeedData(connection);
+
+        Console.WriteLine("Database initialized successfully.");
+    }
+
+
     /// <summary>
     /// テーブルを作成します
     /// </summary>

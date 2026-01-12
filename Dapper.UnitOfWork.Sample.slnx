@@ -3,4 +3,5 @@
   <Project Path="OrderManagement.Application/OrderManagement.Application.csproj" />
   <Project Path="OrderManagement.Domain/OrderManagement.Domain.csproj" />
   <Project Path="OrderManagement.Infrastructure/OrderManagement.Infrastructure.csproj" />
+  <Project Path="Tests/OrderManagement.Tests.csproj" Id="32468aa0-051e-48c6-8a49-1b4876b93b9e" />
 </Solution>
