@@ -11,24 +11,24 @@ using System.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// appsettings.json ‚©‚çÚ‘±•¶š—ñ‚ğæ“¾
+// appsettings.json ã‹ã‚‰æ¥ç¶šæ–‡å­—åˆ—ã‚’å–å¾—
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-// ===== ƒf[ƒ^ƒx[ƒX‰Šú‰» =====
+// ===== ãƒ‡ãƒ¼ã‚¿ãƒ™ãƒ¼ã‚¹åˆæœŸåŒ– =====
 DatabaseInitializer.Initialize(connectionString);
 
-// DI“o˜^
-// Controller + ©‘O‚Ì ValidationFilter
+// DIç™»éŒ²
+// Controller + è‡ªå‰ã® ValidationFilter
 builder.Services.AddControllers(options =>
 {
-    // ƒOƒ[ƒoƒ‹‚É ValidationFilter ‚ğ“K—p
+    // ã‚°ãƒ­ãƒ¼ãƒãƒ«ã« ValidationFilter ã‚’é©ç”¨
     options.Filters.Add<ValidationFilter>();
 });
 
 builder.Services.AddOpenApi();
 
-// FluentValidationiValidator ‚Ì‚İ“o˜^j
+// FluentValidationï¼ˆValidator ã®ã¿ç™»éŒ²ï¼‰
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Database
@@ -59,7 +59,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
-// ƒ~ƒhƒ‹ƒEƒFƒAi—áŠOƒnƒ“ƒhƒŠƒ“ƒO—pj
+// ãƒŸãƒ‰ãƒ«ã‚¦ã‚§ã‚¢ï¼ˆä¾‹å¤–ãƒãƒ³ãƒ‰ãƒªãƒ³ã‚°ç”¨ï¼‰
 app.UseMiddleware<ProblemDetailsMiddleware>();
 
 app.UseHttpsRedirection();
