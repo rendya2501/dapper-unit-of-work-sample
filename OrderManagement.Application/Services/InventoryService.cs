@@ -1,7 +1,7 @@
 ﻿using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Exceptions;
-using OrderManagement.Infrastructure.UnitOfWork;
+using OrderManagement.Infrastructure.UnitOfWork.ActionScope;
 
 namespace OrderManagement.Application.Services;
 
@@ -16,99 +16,73 @@ public class InventoryService(IUnitOfWork uow) : IInventoryService
     /// <inheritdoc />
     public async Task<IEnumerable<Inventory>> GetAllAsync()
     {
-        return await uow.Inventory.GetAllAsync();
+        return await uow.QueryAsync(async ctx => await ctx.Inventory.GetAllAsync());
     }
 
     /// <inheritdoc />
     public async Task<Inventory?> GetByProductIdAsync(int productId)
     {
-        return await uow.Inventory.GetByProductIdAsync(productId);
+        return await uow.QueryAsync(async ctx => await ctx.Inventory.GetByProductIdAsync(productId));
     }
 
     /// <inheritdoc />
     public async Task<int> CreateAsync(string productName, int stock, decimal unitPrice)
     {
-        uow.BeginTransaction();
-
-        try
+        return await uow.CommandAsync(async ctx =>
         {
-            var productId = await uow.Inventory.CreateAsync(new Inventory
+            var productId = await ctx.Inventory.CreateAsync(new Inventory
             {
                 ProductName = productName,
                 Stock = stock,
                 UnitPrice = unitPrice
             });
 
-            await uow.AuditLogs.CreateAsync(new AuditLog
+            await ctx.AuditLogs.CreateAsync(new AuditLog
             {
                 Action = "INVENTORY_CREATED",
                 Details = $"ProductId={productId}, Name={productName}, Stock={stock}, Price={unitPrice}",
                 CreatedAt = DateTime.UtcNow
             });
 
-            uow.Commit();
             return productId;
-        }
-        catch
-        {
-            uow.Rollback();
-            throw;
-        }
+        });
     }
 
     /// <inheritdoc />
     public async Task UpdateAsync(int productId, string productName, int stock, decimal unitPrice)
     {
-        uow.BeginTransaction();
-
-        try
+        await uow.CommandAsync(async ctx =>
         {
-            var existing = await uow.Inventory.GetByProductIdAsync(productId)
+            _ = await ctx.Inventory.GetByProductIdAsync(productId) // Ensure product exists before updating
                 ?? throw new NotFoundException("Product", productId.ToString());
 
-            await uow.Inventory.UpdateAsync(productId, productName, stock, unitPrice);
+            await ctx.Inventory.UpdateAsync(productId, productName, stock, unitPrice);
 
-            await uow.AuditLogs.CreateAsync(new AuditLog
+            await ctx.AuditLogs.CreateAsync(new AuditLog
             {
                 Action = "INVENTORY_UPDATED",
                 Details = $"ProductId={productId}, Name={productName}, Stock={stock}, Price={unitPrice}",
                 CreatedAt = DateTime.UtcNow
             });
-
-            uow.Commit();
-        }
-        catch
-        {
-            uow.Rollback();
-            throw;
-        }
+        });
     }
 
     /// <inheritdoc />
     public async Task DeleteAsync(int productId)
     {
-        uow.BeginTransaction();
-
-        try
+        await uow.CommandAsync(async ctx =>
         {
-            var existing = await uow.Inventory.GetByProductIdAsync(productId)
-                ?? throw new InvalidOperationException($"Product {productId} not found.");
+            var existing = await ctx.Inventory.GetByProductIdAsync(productId)
+                ?? throw new NotFoundException("Product", productId.ToString());
 
-            await uow.Inventory.DeleteAsync(productId);
+            await ctx.Inventory.DeleteAsync(productId);
 
-            await uow.AuditLogs.CreateAsync(new AuditLog
+            await ctx.AuditLogs.CreateAsync(new AuditLog
             {
                 Action = "INVENTORY_DELETED",
                 Details = $"ProductId={productId}, Name={existing.ProductName}",
                 CreatedAt = DateTime.UtcNow
             });
-
-            uow.Commit();
-        }
-        catch
-        {
-            uow.Rollback();
-            throw;
-        }
+        });
     }
 }

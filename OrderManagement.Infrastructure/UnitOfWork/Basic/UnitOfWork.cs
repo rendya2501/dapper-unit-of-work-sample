@@ -2,7 +2,7 @@
 using OrderManagement.Infrastructure.Repositories.Abstractions;
 using System.Data;
 
-namespace OrderManagement.Infrastructure.UnitOfWork;
+namespace OrderManagement.Infrastructure.UnitOfWork.Basic;
 
 /// <summary>
 /// Unit of Work の実装クラス

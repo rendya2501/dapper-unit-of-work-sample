@@ -1,6 +1,6 @@
 ﻿using OrderManagement.Infrastructure.Repositories.Abstractions;
 
-namespace OrderManagement.Infrastructure.UnitOfWork;
+namespace OrderManagement.Infrastructure.UnitOfWork.Basic;
 
 /// <summary>
 /// Unit of Work パターンの中核インターフェース

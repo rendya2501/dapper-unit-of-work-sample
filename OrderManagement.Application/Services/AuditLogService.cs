@@ -1,6 +1,6 @@
 ﻿using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Domain.Entities;
-using OrderManagement.Infrastructure.UnitOfWork;
+using OrderManagement.Infrastructure.UnitOfWork.ActionScope;
 
 namespace OrderManagement.Application.Services;
 
@@ -13,6 +13,6 @@ public class AuditLogService(IUnitOfWork uow) : IAuditLogService
     /// <inheritdoc />
     public async Task<IEnumerable<AuditLog>> GetAllAsync(int limit = 100)
     {
-        return await uow.AuditLogs.GetAllAsync(limit);
+        return await uow.QueryAsync(async ctx => await ctx.AuditLogs.GetAllAsync(limit));
     }
 }

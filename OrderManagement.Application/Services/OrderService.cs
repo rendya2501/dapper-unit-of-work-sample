@@ -2,7 +2,7 @@
 using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Domain.Entities;
 using OrderManagement.Domain.Exceptions;
-using OrderManagement.Infrastructure.UnitOfWork;
+using OrderManagement.Infrastructure.UnitOfWork.ActionScope;
 
 namespace OrderManagement.Application.Services;
 
@@ -24,14 +24,11 @@ public class OrderService(IUnitOfWork uow) : IOrderService
     /// <inheritdoc />
     public async Task<int> CreateOrderAsync(int customerId, List<OrderItem> items)
     {
-        if (items.Count == 0)
-            throw new BusinessRuleViolationException("Order must have at least one item.");
-
-        // トランザクション開始
-        uow.BeginTransaction();
-
-        try
+        return await uow.CommandAsync(async ctx =>
         {
+            if (items.Count == 0)
+                throw new BusinessRuleViolationException("Order must have at least one item.");
+
             // 1. 注文集約を構築
             var order = new Order
             {
@@ -42,7 +39,7 @@ public class OrderService(IUnitOfWork uow) : IOrderService
             // 2. 各商品の在庫確認と注文明細追加
             foreach (var item in items)
             {
-                var inventory = await uow.Inventory.GetByProductIdAsync(item.ProductId)
+                var inventory = await ctx.Inventory.GetByProductIdAsync(item.ProductId)
                     ?? throw new NotFoundException("Product", item.ProductId.ToString());
 
                 if (inventory.Stock < item.Quantity)
@@ -53,7 +50,7 @@ public class OrderService(IUnitOfWork uow) : IOrderService
                 }
 
                 // 在庫減算
-                await uow.Inventory.UpdateStockAsync(
+                await ctx.Inventory.UpdateStockAsync(
                     item.ProductId,
                     inventory.Stock - item.Quantity);
 
@@ -62,10 +59,10 @@ public class OrderService(IUnitOfWork uow) : IOrderService
             }
 
             // 3. 注文を永続化（明細も一緒に保存される）
-            var orderId = await uow.Orders.CreateAsync(order);
+            var orderId = await ctx.Orders.CreateAsync(order);
 
             // 4. 監査ログ記録
-            await uow.AuditLogs.CreateAsync(new AuditLog
+            await ctx.AuditLogs.CreateAsync(new AuditLog
             {
                 Action = "ORDER_CREATED",
                 Details = $"OrderId={orderId}, CustomerId={customerId}, " +
@@ -73,26 +70,20 @@ public class OrderService(IUnitOfWork uow) : IOrderService
                 CreatedAt = DateTime.UtcNow
             });
 
-            uow.Commit();
             return orderId;
-        }
-        catch
-        {
-            uow.Rollback();
-            throw;
-        }
+        });
     }
 
     /// <inheritdoc />
     public async Task<IEnumerable<Order>> GetAllOrdersAsync()
     {
-        return await uow.Orders.GetAllAsync();
+        return await uow.QueryAsync(async ctx => await ctx.Orders.GetAllAsync());
     }
 
     /// <inheritdoc />
     public async Task<Order?> GetOrderByIdAsync(int id)
     {
-        var order = await uow.Orders.GetByIdAsync(id);
+        var order = await uow.QueryAsync(async ctx => await ctx.Orders.GetByIdAsync(id));
 
         return order ?? throw new NotFoundException("Order", id.ToString());
     }

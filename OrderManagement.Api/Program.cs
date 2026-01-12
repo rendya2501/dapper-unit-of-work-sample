@@ -5,7 +5,7 @@ using OrderManagement.Api.Middleware;
 using OrderManagement.Application.Services;
 using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Infrastructure.Database;
-using OrderManagement.Infrastructure.UnitOfWork;
+using OrderManagement.Infrastructure.UnitOfWork.ActionScope;
 using Scalar.AspNetCore;
 using System.Data;
 
