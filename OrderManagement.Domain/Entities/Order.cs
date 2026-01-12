@@ -42,7 +42,7 @@ public class Order
     /// 注文明細は Order を通じてのみアクセスされる。
     /// 外部から直接操作されないよう、setter は private に設定。
     /// </remarks>
-    public List<OrderDetail> Details { get; private set; } = new();
+    public List<OrderDetail> Details { get; private set; } = [];
 
     /// <summary>
     /// 注文合計金額
