@@ -1,7 +1,7 @@
 ﻿using FluentValidation;
-using OrderManagement.Api.Requests;
+using OrderManagement.Api.Contracts.Requests;
 
-namespace OrderManagement.Api.Validators;
+namespace OrderManagement.Api.Contracts.Validators;
 
 /// <summary>
 /// 在庫作成リクエストのバリデーター

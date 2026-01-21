@@ -1,4 +1,4 @@
-﻿namespace OrderManagement.Api.Requests;
+﻿namespace OrderManagement.Api.Contracts.Requests;
 
 /// <summary>
 /// 注文アイテムリクエスト

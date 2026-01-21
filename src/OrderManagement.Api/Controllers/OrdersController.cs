@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using OrderManagement.Api.Requests;
-using OrderManagement.Api.Responses;
+using OrderManagement.Api.Contracts.Requests;
+using OrderManagement.Api.Contracts.Responses;
 using OrderManagement.Application.Models;
 using OrderManagement.Application.Services.Abstractions;
 using OrderManagement.Domain.Entities;
