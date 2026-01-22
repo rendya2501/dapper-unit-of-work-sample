@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using static OrderManagement.Api.Contracts.Requests.OrderItemRequest;
 
 namespace OrderManagement.Api.Contracts.Requests;
 
