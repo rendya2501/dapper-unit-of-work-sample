@@ -13,17 +13,6 @@ public static class DatabaseInitializer
     /// データベースを初期化します（テーブル作成 + サンプルデータ投入）
     /// </summary>
     /// <param name="connectionString">接続文字列</param>
-    public static void Initialize(string connectionString)
-    {
-        using var connection = new SqliteConnection(connectionString);
-        connection.Open();
-
-        CreateTables(connection);
-        SeedData(connection);
-
-        Console.WriteLine("Database initialized successfully.");
-    }
-
     public static void Initialize(IDbConnection connection)
     {
         if (connection.State != ConnectionState.Open)
